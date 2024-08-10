@@ -1,0 +1,44 @@
+# Load necessary libraries
+library(biomaRt)
+
+# Specify the Ensembl database to use
+ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+
+# List of gene symbols
+gene_symbols <- c("Stat1", "Irf7", "Irf1", "Cxcl10", "Isg15", 
+                  "Il6", "Il1b", "Irf9", "Stat2", "Gbp3", 
+                  "Psmb8", "Psmb9", "Gbp2", "Dhx58", "Tapbp")
+
+# Query Ensembl for corresponding gene IDs
+gene_mapping <- getBM(attributes = c("hgnc_symbol", "ensembl_gene_id"), 
+                      filters = "hgnc_symbol", 
+                      values = gene_symbols, 
+                      mart = ensembl)
+
+# Print the gene mapping
+print(gene_mapping)
+
+# Load necessary libraries
+library(dplyr)
+
+# Suppose gene_mapping contains the mapping of gene symbols to Ensembl gene IDs
+# Assume 'gene_id' is the column name in your dataset containing gene IDs
+gene_ids <- gene_mapping$ensembl_gene_id
+
+# Read in your dataset (assuming the dataset is in a CSV file and has gene IDs in one column)
+# Replace 'your_dataset.csv' with the actual file name
+data <- read.csv("your_dataset.csv")
+
+# Filter the dataset to keep only the rows with the gene IDs of interest
+filtered_data <- data %>% filter(gene_id %in% gene_ids)
+
+# Normalize the data using log transformation on the FPKM values
+# Replace 'FPKM_values' with the actual name of your expression data column
+filtered_data[ , "FPKM_values"] <- log2(filtered_data[ , "FPKM_values"] + 1)
+
+# Save the processed data to a new CSV file as "processed_gene_data.csv"
+write.csv(filtered_data, "processed_gene_data.csv", row.names = FALSE)
+
+# Print a message indicating completion
+print("Data processing complete. Filtered and normalized dataset saved as 'processed_gene_data.csv'.")
+
